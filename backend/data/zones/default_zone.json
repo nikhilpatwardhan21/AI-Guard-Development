@@ -1,0 +1,12 @@
+{
+  "name": "Restricted Zone",
+  "points": [
+    [0.2, 0.25],
+    [0.8, 0.25],
+    [0.85, 0.85],
+    [0.15, 0.85]
+  ],
+  "is_normalized": true,
+  "color": "#EF4444",
+  "active": true
+}
