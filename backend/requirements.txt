@@ -1,5 +1,6 @@
 ultralytics>=8.2.0
 opencv-python>=4.8.0
+opencv-stubs>=0.1.0
 supervision>=0.21.0
 fastapi>=0.111.0
 uvicorn[standard]>=0.30.0

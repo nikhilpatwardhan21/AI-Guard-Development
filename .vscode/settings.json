@@ -5,5 +5,11 @@
   ],
   "python.autoComplete.extraPaths": [
     "${workspaceFolder}/backend"
-  ]
+  ],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingTypeStubs": "none",
+    "reportUnknownMemberType": "none",
+    "reportAttributeAccessIssue": "none"
+  }
 }
