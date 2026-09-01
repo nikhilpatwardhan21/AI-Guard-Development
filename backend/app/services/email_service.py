@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from app.config import settings
 
 logger = logging.getLogger("ai_guard.email")
@@ -36,7 +36,7 @@ class EmailAlertService:
         timestamp: str,
         zone_name: str,
         intruder_count: int,
-        tracker_ids: list,
+        tracker_ids: List[int],
         screenshot_path: Optional[str] = None
     ) -> bool:
         """Sends an alert email synchronously (should be called in a background thread)."""
@@ -50,38 +50,225 @@ class EmailAlertService:
 
         try:
             msg = MIMEMultipart("related")
-            msg["Subject"] = f"🚨 [AI GUARD ALERT] Intruder Detected in {zone_name}!"
-            msg["From"] = f"AI Guard Security <{self.user}>"
+            # Professional, non-spammy subject line
+            msg["Subject"] = f"Security Advisory: Person Detected in {zone_name} [{alert_id}]"
+            msg["From"] = f"AI Guard Security System <{self.user}>"
             msg["To"] = self.recipient
 
-            # HTML Body
+            formatted_ids = ", ".join(f"#{tid}" for tid in tracker_ids) if tracker_ids else "N/A"
+            person_text = f"{intruder_count} Person" if intruder_count == 1 else f"{intruder_count} People"
+
+            # Enterprise Professional HTML Template
             html_content = f"""
             <!DOCTYPE html>
-            <html>
+            <html lang="en">
             <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>AI Guard Security Notification</title>
                 <style>
-                    body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #0d1117; color: #e6edf3; padding: 20px; }}
-                    .card {{ background-color: #161b22; border: 1px solid #ff4444; border-radius: 8px; padding: 24px; max-width: 600px; margin: 0 auto; }}
-                    .header {{ color: #ff5555; font-size: 22px; font-weight: bold; margin-bottom: 12px; }}
-                    .info-row {{ margin: 8px 0; font-size: 14px; }}
-                    .label {{ color: #8b949e; font-weight: 600; display: inline-block; width: 140px; }}
-                    .value {{ color: #ffffff; font-weight: bold; }}
-                    .screenshot {{ width: 100%; border-radius: 6px; margin-top: 16px; border: 1px solid #30363d; }}
-                    .footer {{ margin-top: 20px; font-size: 12px; color: #8b949e; text-align: center; }}
+                    body {{
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f4f6f9;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                        color: #1f2937;
+                        -webkit-font-smoothing: antialiased;
+                    }}
+                    .wrapper {{
+                        width: 100%;
+                        table-layout: fixed;
+                        background-color: #f4f6f9;
+                        padding: 30px 0;
+                    }}
+                    .main-card {{
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        border-radius: 12px;
+                        border: 1px solid #e5e7eb;
+                        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+                        overflow: hidden;
+                    }}
+                    .header {{
+                        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                        padding: 24px 32px;
+                        color: #ffffff;
+                    }}
+                    .header-top {{
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 8px;
+                    }}
+                    .brand-title {{
+                        font-size: 18px;
+                        font-weight: 700;
+                        letter-spacing: -0.01em;
+                        color: #ffffff;
+                        margin: 0;
+                    }}
+                    .badge-alert {{
+                        display: inline-block;
+                        background-color: #ef4444;
+                        color: #ffffff;
+                        font-size: 11px;
+                        font-weight: 700;
+                        padding: 4px 10px;
+                        border-radius: 20px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.05em;
+                    }}
+                    .header-subtitle {{
+                        font-size: 13px;
+                        color: #94a3b8;
+                        margin: 0;
+                    }}
+                    .content {{
+                        padding: 28px 32px;
+                    }}
+                    .alert-summary {{
+                        font-size: 14px;
+                        line-height: 1.6;
+                        color: #374151;
+                        margin-bottom: 24px;
+                        padding-bottom: 16px;
+                        border-bottom: 1px solid #f3f4f6;
+                    }}
+                    .meta-table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 24px;
+                        background-color: #f8fafc;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        border: 1px solid #edf2f7;
+                    }}
+                    .meta-table td {{
+                        padding: 12px 16px;
+                        font-size: 13px;
+                        border-bottom: 1px solid #edf2f7;
+                    }}
+                    .meta-table tr:last-child td {{
+                        border-bottom: none;
+                    }}
+                    .meta-label {{
+                        font-weight: 600;
+                        color: #64748b;
+                        width: 40%;
+                    }}
+                    .meta-val {{
+                        font-weight: 600;
+                        color: #0f172a;
+                    }}
+                    .evidence-title {{
+                        font-size: 14px;
+                        font-weight: 700;
+                        color: #0f172a;
+                        margin: 20px 0 10px 0;
+                    }}
+                    .image-container {{
+                        background-color: #0f172a;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        border: 1px solid #e2e8f0;
+                        text-align: center;
+                    }}
+                    .screenshot {{
+                        width: 100%;
+                        height: auto;
+                        display: block;
+                    }}
+                    .cta-section {{
+                        margin-top: 28px;
+                        text-align: center;
+                    }}
+                    .cta-button {{
+                        display: inline-block;
+                        background-color: #0284c7;
+                        color: #ffffff;
+                        text-decoration: none;
+                        font-size: 13px;
+                        font-weight: 600;
+                        padding: 11px 24px;
+                        border-radius: 6px;
+                    }}
+                    .footer {{
+                        padding: 20px 32px;
+                        background-color: #f8fafc;
+                        border-top: 1px solid #e5e7eb;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #6b7280;
+                        line-height: 1.5;
+                    }}
                 </style>
             </head>
             <body>
-                <div class="card">
-                    <div class="header">🚨 INTRUSION DETECTED</div>
-                    <div class="info-row"><span class="label">Zone:</span> <span class="value">{zone_name}</span></div>
-                    <div class="info-row"><span class="label">Time:</span> <span class="value">{timestamp}</span></div>
-                    <div class="info-row"><span class="label">Intruders Count:</span> <span class="value">{intruder_count}</span></div>
-                    <div class="info-row"><span class="label">Tracked Person IDs:</span> <span class="value">{tracker_ids}</span></div>
-                    <div class="info-row"><span class="label">Alert ID:</span> <span class="value">#{alert_id}</span></div>
-                    
-                    {"<p><strong>Intrusion Frame Capture:</strong></p><img src='cid:screenshot' class='screenshot'/>" if screenshot_path and Path(screenshot_path).exists() else ""}
-                    
-                    <div class="footer">AI Guard Intelligent Surveillance System &bull; Real-time Computer Vision</div>
+                <div class="wrapper">
+                    <div class="main-card">
+                        <!-- Header -->
+                        <div class="header">
+                            <table style="width: 100%;" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td>
+                                        <div class="brand-title">AI GUARD SURVEILLANCE</div>
+                                        <div class="header-subtitle">Computer Vision Security Advisory</div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <span class="badge-alert">Zone Breach</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Content Body -->
+                        <div class="content">
+                            <p class="alert-summary">
+                                An unauthorized presence was detected within the defined boundary of <strong>{zone_name}</strong> at <strong>{timestamp}</strong>. Event telemetry and video evidence are recorded below.
+                            </p>
+
+                            <!-- Incident Metadata Table -->
+                            <table class="meta-table" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td class="meta-label">Location / Zone</td>
+                                    <td class="meta-val">{zone_name}</td>
+                                </tr>
+                                <tr>
+                                    <td class="meta-label">Detection Timestamp</td>
+                                    <td class="meta-val">{timestamp}</td>
+                                </tr>
+                                <tr>
+                                    <td class="meta-label">Individuals Detected</td>
+                                    <td class="meta-val">{person_text}</td>
+                                </tr>
+                                <tr>
+                                    <td class="meta-label">Tracked Object IDs</td>
+                                    <td class="meta-val" style="font-family: monospace;">{formatted_ids}</td>
+                                </tr>
+                                <tr>
+                                    <td class="meta-label">Incident Reference</td>
+                                    <td class="meta-val" style="font-family: monospace; color: #475569;">#{alert_id}</td>
+                                </tr>
+                            </table>
+
+                            <!-- Evidence Image Capture -->
+                            {"<div class='evidence-title'>Captured Video Evidence</div><div class='image-container'><img src='cid:screenshot' class='screenshot' alt='Intrusion Evidence Frame'/></div>" if screenshot_path and Path(screenshot_path).exists() else ""}
+
+                            <!-- Dashboard Link -->
+                            <div class="cta-section">
+                                <a href="http://localhost:5173" class="cta-button">Open Security Dashboard</a>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="footer">
+                            <div>AI Guard Intelligent Vision Engine &bull; YOLOv8 + ByteTrack</div>
+                            <div style="margin-top: 4px; font-size: 11px; color: #9ca3af;">
+                                This is an automated advisory dispatched according to your monitored zone policy.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </body>
             </html>
@@ -96,7 +283,7 @@ class EmailAlertService:
                     img_data = img_file.read()
                     image = MIMEImage(img_data)
                     image.add_header("Content-ID", "<screenshot>")
-                    image.add_header("Content-Disposition", "inline", filename=f"intrusion_{alert_id}.jpg")
+                    image.add_header("Content-Disposition", "inline", filename=f"incident_{alert_id}.jpg")
                     msg.attach(image)
 
             # SMTP Transport

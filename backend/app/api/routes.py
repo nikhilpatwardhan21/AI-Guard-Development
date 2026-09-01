@@ -56,7 +56,19 @@ async def get_alert_history(limit: int = Query(50, ge=1, le=200)):
 @router.get("/alerts/{alert_id}/screenshot")
 async def get_alert_screenshot(alert_id: str):
     """Fetches full-resolution screenshot captured during an intrusion."""
-    file_path = Path(settings.screenshot_dir) / f"{alert_id}.jpg"
+    # Sanitize and validate input to prevent path traversal
+    if not alert_id or not alert_id.replace('-', '').replace('_', '').isalnum():
+        raise HTTPException(status_code=400, detail="Invalid alert ID format")
+
+    screenshot_dir = Path(settings.screenshot_dir).resolve()
+    file_path = (screenshot_dir / f"{alert_id}.jpg").resolve()
+
+    # Ensure path stays within screenshot directory
+    try:
+        file_path.relative_to(screenshot_dir)
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Access denied")
+
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Alert screenshot not found")
     return FileResponse(file_path, media_type="image/jpeg")
