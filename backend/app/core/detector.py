@@ -34,14 +34,17 @@ class PersonDetector:
             return sv.Detections.empty()
 
         try:
-            results = self.model(
+            results_list = list(self.model(
                 frame,
                 conf=self.confidence,
                 classes=[self.PERSON_CLASS_ID],
                 device=self.device,
                 verbose=False
-            )[0]
+            ))
+            if not results_list:
+                return sv.Detections.empty()
 
+            results = results_list[0]
             detections = sv.Detections.from_ultralytics(results)
             return detections
         except Exception as e:

@@ -117,6 +117,9 @@ class ZoneMonitor:
         if len(detections) == 0:
             return False, np.array([], dtype=bool), []
 
+        if self.polygon_zone is None:
+            return False, np.array([], dtype=bool), []
+
         # supervision PolygonZone trigger checks detections against polygon
         try:
             intruder_mask = self.polygon_zone.trigger(detections=detections)

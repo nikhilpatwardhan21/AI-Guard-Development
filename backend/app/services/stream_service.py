@@ -140,7 +140,7 @@ class VideoPipelineService:
     def get_latest_jpeg(self) -> Optional[bytes]:
         frame = self.process_next_frame()
         if frame is not None:
-            ret, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            ret, buffer = cv2.imencode('.jpg', frame, (int(cv2.IMWRITE_JPEG_QUALITY), 80))
             if ret:
                 return buffer.tobytes()
         return None
@@ -151,7 +151,7 @@ class VideoPipelineService:
             # Process in thread to avoid blocking FastAPI async event loop
             frame = await asyncio.to_thread(self.process_next_frame)
             if frame is not None:
-                ret, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                ret, buffer = cv2.imencode('.jpg', frame, (int(cv2.IMWRITE_JPEG_QUALITY), 80))
                 if ret:
                     jpeg_bytes = buffer.tobytes()
                     yield (

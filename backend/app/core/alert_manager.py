@@ -37,7 +37,7 @@ class AlertManager:
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
         if self.log_file.exists():
             try:
-                with open(self.log_file, "r", encoding="utf-8") as f:
+                with open(self.log_file, "r", encoding="utf-8-sig") as f:
                     data = json.load(f)
                     self.alerts_history = [IntrusionAlert(**item) for item in data]
                 logger.info(f"Loaded {len(self.alerts_history)} past alert records.")

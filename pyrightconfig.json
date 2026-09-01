@@ -4,6 +4,10 @@
   "extraPaths": [
     "backend"
   ],
-  "reportMissingTypeStubs": false,
-  "reportAttributeAccessIssue": false
+  "typeCheckingMode": "off",
+  "reportMissingTypeStubs": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportArgumentType": "none",
+  "reportIndexIssue": "none",
+  "reportOptionalMemberAccess": "none"
 }

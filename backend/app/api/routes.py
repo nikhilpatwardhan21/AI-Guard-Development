@@ -30,7 +30,7 @@ async def get_current_snapshot(annotated: bool = Query(True, description="Whethe
     else:
         frame = pipeline_service.camera.get_frame()
         if frame is not None:
-            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+            _, buffer = cv2.imencode('.jpg', frame, (int(cv2.IMWRITE_JPEG_QUALITY), 85))
             frame_bytes = buffer.tobytes()
         else:
             frame_bytes = None

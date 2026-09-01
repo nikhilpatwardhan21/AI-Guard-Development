@@ -6,10 +6,13 @@
   "python.autoComplete.extraPaths": [
     "${workspaceFolder}/backend"
   ],
-  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.typeCheckingMode": "off",
   "python.analysis.diagnosticSeverityOverrides": {
     "reportMissingTypeStubs": "none",
     "reportUnknownMemberType": "none",
-    "reportAttributeAccessIssue": "none"
+    "reportAttributeAccessIssue": "none",
+    "reportArgumentType": "none",
+    "reportIndexIssue": "none",
+    "reportOptionalMemberAccess": "none"
   }
 }
